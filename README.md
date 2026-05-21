@@ -1,46 +1,65 @@
-# Herbal Tea Agent
+# AI Ops Agent
 
-基于 LangGraph 的智能茶饮顾问 Agent，用户通过自然语言描述症状，Agent 自主调用工具完成体质分析、茶饮推荐和养生报告生成。
+基于 LangGraph 的智能运维诊断 Agent，通过 Plan-Execute-Replan 实现多步推理，集成 MCP 工具调用与 RAG 知识库，实现告警自动诊断与根因分析。
 
 ## 技术栈
 
 - **Agent框架**: LangChain + LangGraph
-- **设计模式**: ReAct（感知→规划→执行→反馈）
-- **向量数据库**: ChromaDB
-- **大模型**: 通义千问
-- **前端**: Streamlit
-- **存储**: SQLite
+- **设计模式**: ReAct、Plan-Execute-Replan
+- **工具集成**: MCP协议（日志查询、监控数据）
+- **知识库**: RAG + ChromaDB（两阶段检索）
+- **后端**: FastAPI + SSE
 
 ## 核心能力
 
-### 1. 多工具自主编排
+### 1. 多 Agent 协同架构
 
-定义 5 个工具，Agent 根据用户问题自主决定调用顺序：
+通过 LangGraph 编排三个 Agent 协同工作：
 
-| 工具 | 功能 |
-|------|------|
-| 知识库检索 | 查询药材功效、茶饮配方 |
-| 用户识别 | 获取用户ID |
-| 时间获取 | 获取当前月份 |
-| 数据查询 | 查询用户饮用记录 |
-| 报告触发 | 切换报告生成模式 |
+| Agent | 职责 |
+|-------|------|
+| RAG 知识库 Agent | 文档解析、向量检索、知识问答 |
+| ReAct 对话 Agent | 日常咨询、多轮对话、上下文记忆 |
+| Plan-Execute-Replan 运维 Agent | 告警诊断、多步推理、工具调用 |
 
-### 2. 状态管理与动态提示词
+### 2. Plan-Execute-Replan 诊断流程
 
-- 通过中间件维护会话上下文
-- 根据场景动态切换通用问答 / 报告生成两套 Prompt 模板
-- 避免提示词混用导致的输出格式错误
+- **Plan**: 将故障诊断任务拆解为多步计划
+- **Execute**: 逐步执行计划，调用 MCP 工具
+- **Replan**: 评估结果，决定继续或生成报告
 
-### 3. 用户画像与合规
+### 3. RAG 知识库优化
 
-- 分级敏感词检测与来源区分
-- 状态机管理话题切换与选项识别
-- 支持用户拒绝/恢复机制
-- SQLite 持久化存储，实现跨会话个性化推荐
+- 多类型文档自动解析与向量化入库
+- 两阶段检索：向量检索 + 重排序
+- 查询改写、意图路由与拒答机制，减少无效回答
 
-### 4. 流式输出
+### 4. 对话记忆管理
 
-- Token 级流式响应，分步返回 Agent 决策过程
-- 用户可实时看到“工具选择→参数填充→执行结果→生成回复”
+- 分层记忆机制：保留最近多轮原文
+- 当 Token 达上下文窗口 70% 时，自动触发 LLM 摘要压缩
+- 保证长会话连贯性与上下文自动加载
 
-## 架构图
+### 5. MCP 工具集成
+
+- 通过 MCP 协议统一接入日志服务（CLS）和监控服务（Monitor）
+- 实现自动化告警查询与日志分析
+- 支持工具调用重试与指数退避
+
+### 6. SSE 流式输出
+
+- 实时返回 Agent 决策过程
+- 用户可看到“步骤规划→工具调用→结果分析→生成建议”
+ai-ops-agent/
+├── agent/                  # Agent 核心
+│   ├── aiops_service.py        # Plan-Execute-Replan 服务
+│   ├── rag_agent_service.py    # RAG Agent 服务
+│   └── react_agent_service.py  # ReAct 对话服务
+├── mcp/                    # MCP 工具服务
+│   ├── cls_server.py           # 日志查询
+│   └── monitor_server.py       # 监控数据
+├── rag/                    # RAG 模块
+│   ├── vector_store.py         # 向量存储
+│   └── document_splitter.py    # 文档分割
+├── utils/                  # 工具函数
+└── requirements.txt
