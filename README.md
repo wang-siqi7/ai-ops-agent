@@ -50,16 +50,3 @@
 
 - 实时返回 Agent 决策过程
 - 用户可看到“步骤规划→工具调用→结果分析→生成建议”
-ai-ops-agent/
-├── agent/                  # Agent 核心
-│   ├── aiops_service.py        # Plan-Execute-Replan 服务
-│   ├── rag_agent_service.py    # RAG Agent 服务
-│   └── react_agent_service.py  # ReAct 对话服务
-├── mcp/                    # MCP 工具服务
-│   ├── cls_server.py           # 日志查询
-│   └── monitor_server.py       # 监控数据
-├── rag/                    # RAG 模块
-│   ├── vector_store.py         # 向量存储
-│   └── document_splitter.py    # 文档分割
-├── utils/                  # 工具函数
-└── requirements.txt
